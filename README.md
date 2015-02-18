@@ -1,5 +1,7 @@
 # dynamicJson
 
+[![Build Status](https://api.travis-ci.org/adlerHTE/dynamicJson.png)](https://api.travis-ci.org/adlerHTE/dynamicJson)
+
 This library can be used to read any json [in java] and provide some methods to query (and edit) them via JsonPath.
 
 The library was initially developed to interact with CouchDB.
