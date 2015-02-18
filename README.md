@@ -2,7 +2,7 @@
 
 This library can be used to read any json [in java] and provide some methods to query (and edit) them via JsonPath.
 
-The 
+The library was initially developed to interact with CouchDB.
 
 The library is still in development.
 
