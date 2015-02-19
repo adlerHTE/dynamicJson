@@ -4,7 +4,7 @@
 
 This library can be used to read any json [in java] and provide some methods to query (and edit) them via JsonPath.
 
-The library was initially developed to interact with CouchDB.
+The library was initially developed to interact with CouchDB. Parsing is based on jackson-core-2.1.4.
 
 The library is still in development.
 
