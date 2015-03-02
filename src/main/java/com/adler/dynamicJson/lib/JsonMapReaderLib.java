@@ -68,13 +68,14 @@ public class JsonMapReaderLib {
 					values.add(new JsonMap(a));
 				}
 
+				// values.add(new JsonMap(jParser.getValueAsString()));
 			}
 			if (jParser.getCurrentToken() == JsonToken.VALUE_NULL) {
 				values.add(JsonMap.NULL);
 			}
 			if (jParser.getCurrentToken() == JsonToken.VALUE_NUMBER_INT
 					|| jParser.getCurrentToken() == JsonToken.VALUE_NUMBER_FLOAT) {
-				// this is time consuming... should be changed??
+				//this is the only way to have the same result new BigDecimal(0.35)===>0.3499999999999999777955
 				values.add(new JsonMap(jParser.getDecimalValue()));
 			}
 			if (jParser.getCurrentToken() == JsonToken.START_ARRAY) {

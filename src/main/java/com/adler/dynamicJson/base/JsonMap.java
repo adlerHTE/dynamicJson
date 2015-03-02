@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.adler.dynamicJson.jpath.JPath;
+
 /**
  * This class represents a dynamicJson. Every json attribute is a key in a map
  * (and the value is another JsonMap). There are static constructors for
@@ -108,6 +110,8 @@ public class JsonMap implements Serializable {
 
 	/**
 	 * Return the value of a property at root level called "name"
+	 * there is a special behavior if the property is called "length" 
+	 * (which returns the length of the array or of the string)
 	 * 
 	 * @param name
 	 * @return
@@ -128,9 +132,17 @@ public class JsonMap implements Serializable {
 			
 		String truePropName = (String) name.subSequence(0, endPointer);
 		int n = this.getKeys().indexOf(truePropName);
-		if (n < 0) { throw new IllegalArgumentException(
+		if (n < 0) {
+			if (truePropName.equalsIgnoreCase("length")){ //special case for length
+				if (this.type== JsonMap.TYPE_SIMPLE_ARRAY || this.type == JsonMap.TYPE_OBJECT_ARRAY)
+					return new JsonMap(new BigDecimal(this.getValues().size()));
+				if (this.type== JsonMap.TYPE_SIMPLE_STR)
+					return new JsonMap(new BigDecimal(this.getContent().get(0).length()));
+			}
+			throw new IllegalArgumentException(
 				"No local property called: " + name + " found. Alowed: "
 						+ this.getKeys()); }
+		
 		if (n >= this.getValues().size()) { throw new IllegalStateException(
 				"Invalid index [too big] for property: " + n); }
 
@@ -145,7 +157,23 @@ public class JsonMap implements Serializable {
 	}
 	
 	
-	
+	/**
+	 * only for Json of type Complex it is possible to delete a property by name
+	 * @param property
+	 */
+	public void deleteRootProperty(String property) {
+		if (type!=JsonMap.TYPE_COMPLEX) throw new RuntimeException("Unsupported op!");
+		int ref =-1;
+		for (int i =0; i<this.keys.size();i++) {
+			if (this.keys.get(i).equals(property)){
+				ref = i;
+			}
+		}
+		if (ref<0) throw new IllegalArgumentException("Cannot delete: "+property);
+		
+		this.keys.remove(ref);
+		this.values.remove(ref);
+	}
 	
 
 	private JsonMap getArrayElement(JsonMap array, int index) {
@@ -157,6 +185,10 @@ public class JsonMap implements Serializable {
 
 	/**
 	 * Retrieve the child json given the jsonPath (from current object)
+	 * 
+	 * Warning: only a subset of the JsonPath is implemented here.
+	 * For full filtering paths see: 
+	 * @see JPath
 	 * 
 	 * @param path
 	 *            subset of JsonPath expression Language (es:
@@ -236,13 +268,13 @@ public class JsonMap implements Serializable {
 		if (this.type == JsonMap.TYPE_COMPLEX) {
 			for (int k = 0; k < this.keys.size(); k++) {
 				vv += "" + this.getKeys().get(k) + ":"
-						+ this.getValues().get(k).toFullString() + "\n";
+						+ this.getValues().get(k).toContentString() + "\n";
 			}
 			return "JsonMap type: " + this.type + "  content=" + vv + "\n";
 		}
 		if (this.type == JsonMap.TYPE_OBJECT_ARRAY) {
 			for (JsonMap jm : this.values) {
-				vv += jm.toFullString() + ",";
+				vv += jm.toContentString() + ",";
 
 			}
 			return "JsonMap type: " + this.type + "  content=" + vv + "\n";
@@ -315,13 +347,19 @@ public class JsonMap implements Serializable {
 				return "" + this.getValue().toPlainString();
 			case JsonMap.TYPE_OBJECT_ARRAY :
 			case JsonMap.TYPE_SIMPLE_ARRAY :
-				return "array";
+				return "array ["+this.values.size()+"]";
 			case JsonMap.TYPE_COMPLEX :
-				return "object";
+				return "object keys:["+this.keys+"]";
 		}
 		return "unknown";
 	}
 
+	/**
+	 * Similar to getProperty but doesn't throw any exceptions.
+	 * 
+	 * @param string
+	 * @return correct value OR JsonMap.NULL
+	 */
 	public JsonMap getPropertySilently(String string) {
 		JsonMap res = JsonMap.NULL;
 		try{
@@ -330,6 +368,8 @@ public class JsonMap implements Serializable {
 		return res;
 		
 	}
+
+	
 	
 
 }

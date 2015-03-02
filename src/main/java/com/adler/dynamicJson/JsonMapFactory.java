@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.log4j.Logger;
 
 import com.adler.dynamicJson.base.JsonMap;
@@ -25,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * This class use reflection property to construct JsonMap from normal POJOs and
@@ -124,11 +122,13 @@ public class JsonMapFactory {
 
 		for (Method method : mms) {
 			if (!excludedMethods.contains(method.getName())
-					&& method.getName().startsWith("get")
+					&& (method.getName().startsWith("get") || method.getName().startsWith("is"))
 					&& method.getTypeParameters().length == 0) {
 				try {
 					LOGGER.debug("Invoking: " + method.getName());
-					String prop = method.getName().substring(3);
+					int n = 3; //get
+					if (method.getName().startsWith("is")) n=2;
+					String prop = method.getName().substring(n);
 					prop = ("" + prop.charAt(0)).toLowerCase()
 							+ (prop.length() > 1 ? prop.substring(1) : "");
 					JsonMap val;
@@ -193,7 +193,7 @@ public class JsonMapFactory {
 	public static <T> T getObjectFromJsonMap(Class<T> mainClass, JsonMap map,
 			Class<?> genericClass) throws InstantiationException,
 			IllegalAccessException {
-		LOGGER.info("This class is still under development! Use with care!");
+		LOGGER.debug("This class is still under development! Use with care!");
 		LOGGER.debug("class=" + mainClass);
 		LOGGER.debug("generic=" + genericClass);
 		AnnotationData aData = getAnnotationData(mainClass);
@@ -261,7 +261,6 @@ public class JsonMapFactory {
 
 			// one more try....
 			for (T t : contants) {
-//				System.err.println(t + "  " + map.toContentString());
 				if (t.toString().equalsIgnoreCase(map.toContentString())) return t;
 			}
 			LOGGER.error(" Impossible to convert  ENUM!! " + mainClass);

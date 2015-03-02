@@ -6,6 +6,8 @@ import org.apache.log4j.Logger;
 
 import com.adler.dynamicJson.base.JsonMap;
 import com.adler.dynamicJson.exception.InvalidPropertyName;
+import com.adler.dynamicJson.jpath.JPath;
+import com.adler.dynamicJson.jpath.JToken;
 
 public class EditableJsonMap extends JsonMap {
 
@@ -111,7 +113,19 @@ public class EditableJsonMap extends JsonMap {
 	}
 
 	public void addPropertyToArray(String property, JsonMap jsonMap) {
-		JsonMap array = this.getRootProperty(property);
+		JsonMap array =null;
+		try{
+		  array = this.getRootProperty(property);
+		}catch(IllegalArgumentException ie){
+			try {
+				this.addProperty(property, JsonMap.JsonMapObjectArray(new ArrayList<JsonMap>()));
+				array = this.getRootProperty(property);
+			}
+			catch (InvalidPropertyName e) {
+				e.printStackTrace();
+				throw new RuntimeException();
+			}
+		}
 		if (array.getType()!=JsonMap.TYPE_OBJECT_ARRAY)
 			throw new IllegalArgumentException();
 		array.getValues().add(jsonMap);
@@ -130,6 +144,18 @@ public class EditableJsonMap extends JsonMap {
 			}  
 		  }
 		this.addPropertyToArray(property, jsonMap);
+		
+		
+	}
+
+	public void deleteProperty(String string) {
+		JPath jp = new JPath(string);
+		JToken last = jp.removeLastLevel();
+		JsonMap parent = jp.apply(this).getValues().get(0);
+		LOGGER.info("parent = "+parent.toFullString());
+		parent.deleteRootProperty(last.getValue());
+		
+		
 		
 		
 	}
